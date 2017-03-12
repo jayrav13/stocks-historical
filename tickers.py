@@ -47,7 +47,7 @@ for ticker in tickers:
 	data.append(ticker)
 	print ticker["Symbol"] + " - " + ticker["Name"]
 
-f = open(filename, 'w')
+f = open('data/' + filename, 'w')
 f.write(json.dumps(data, indent=4, sort_keys=True))
 f.close()
 
