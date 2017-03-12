@@ -4,15 +4,17 @@ import sys
 import urllib2
 import requests
 import json
+import os
 from datetime import date, timedelta
 
-
+# Extract year from command-line arguments.
 year = None
 if len(sys.argv) > 1:
 	year = sys.argv[1]
 else:
-	year = 1980
+	year = 1970
 
+# Extract filename from command-line arguments.
 filename = None
 if len(sys.argv) > 2:
 	filename = sys.argv[2]
@@ -30,7 +32,8 @@ def generate_url(ticker):
 	return "http://chart.finance.yahoo.com/table.csv?s=%s&a=0&b=1&c=%s&g=d&ignore=.csv" % (ticker, year)
 
 # Pull all tickers in CSV
-tickers = get_csv('http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download')
+url = "http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download"
+tickers = get_csv(url)
 
 # Set up data array.
 data = []
@@ -47,7 +50,12 @@ for ticker in tickers:
 	data.append(ticker)
 	print ticker["Symbol"] + " - " + ticker["Name"]
 
-f = open('data/' + filename, 'w')
+directory = "data/"
+
+if not os.path.exists(directory):
+	os.makedirs(directory)
+
+f = open(directory + filename, 'w')
 f.write(json.dumps(data, indent=4, sort_keys=True))
 f.close()
 

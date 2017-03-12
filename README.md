@@ -16,8 +16,8 @@ pip install -r requirements.txt
 Execute the primary script, `python tickers.py`, with the following arguments:
 
 ```bash
-$ python tickers.py 				# default = 1980
-$ python tickers.py 1980
+$ python tickers.py 				# default = 1970
+$ python tickers.py 1970
 $ python tickers.py 2015
 $ python tickers.py 2015 2015.json 	# default = "result.json"
 ```
