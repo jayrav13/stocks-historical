@@ -2,41 +2,41 @@
 import csv
 import sys
 import urllib2
+import requests
+import json
 from datetime import date, timedelta
-from model import db, Tickers, Details
 
-# Start by deleting all current rows
-Tickers.query.delete()
-Details.query.delete()
+# Return data from CSV.
+def get_csv(url, delimiter=","):
+	response = requests.get(url)
+	data = csv.DictReader(response.text.split('\n'), delimiter=delimiter)
+	return data
+
+# Generate URL for ticker-specific historical data.
+def generate_url(ticker):
+	return "http://chart.finance.yahoo.com/table.csv?s=%s&a=0&b=0&c=1980&g=d&ignore=.csv" % ticker
 
 # Pull all tickers in CSV
-tickerlist = "http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download"
-tickerresponse = urllib2.urlopen(tickerlist)
-tickerarray = csv.reader(tickerresponse)
-added = [0, 0]
+tickers = get_csv('http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download')
 
-def generateUrl(ticker):
-	return "http://real-chart.finance.yahoo.com/table.csv?s=" + ticker + "&d=9&e=16&f=2015&g=d&a=1&b=1&c=2015&ignore=.csv"
+# Set up data array.
+data = []
 
-# Loop through all tickers and add to database
-for tick in tickerarray:
-	ticker = Tickers(tick[0], tick[1], tick[4], tick[5], tick[6], tick[7])
+# Add to data array, making this a 2D array.
+for ticker in tickers:
+	historical = get_csv( generate_url( ticker["Symbol"] ) )
 
-	try:
-		history = urllib2.urlopen(generateUrl(tick[0]))
-		historycsv = csv.reader(history)
+	ticker['history'] = []
 
-		for hist in historycsv:
-			detail = Details(hist[0], hist[1], hist[2], hist[3], hist[4], hist[5], hist[6])
-			ticker.details.append(detail)	
+	for history in historical:
+		ticker['history'].append(history)
 
-		db.session.add(ticker)
-		db.session.commit()
-		added[0] += 1
-		print tick[0] + " added."
-	except:
-		added[1] += 1
-		print tick[0] + " failed."
+	data.append(ticker)
+	print ticker["Symbol"] + " - " + ticker["Name"]
 
-# Commit, print success.
-print "Successfully added " + str(added[0]) + " of " + str(added[0] + added[1]) + " tickers."
+f = open('result.json', 'w')
+f.write(json.dumps(data))
+f.close()
+
+
+
